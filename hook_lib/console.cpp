@@ -58,6 +58,7 @@ void game_console::KeyboardHandle(WPARAM wParam, int key, char chKey)
 
 			_Cbuf_AddText(0, &g_console.szBuffer[g_console.start]);
 		}
+		printf("T9> %s\n", &g_console.szBuffer[g_console.start]);
 
 		g_console.bopen = false;
 		memset(szBuffer, 0, 4096);

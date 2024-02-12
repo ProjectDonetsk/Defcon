@@ -47,8 +47,6 @@ struct WeaponDef {
 
 #pragma comment(lib, "ntdll.lib")
 
-extern void* exception_handler;
-
 #define base g_Addrs.ModuleBase
 
 #pragma warning(disable:4996)
@@ -335,6 +333,15 @@ enum XAssetType : unsigned __int8
 	ASSET_TYPE_SCENARIO = 0xDC,
 };
 
+enum scriptInstance_t : __int32
+{
+	SCRIPTINSTANCE_SERVER = 0x0,
+	SCRIPTINSTANCE_CLIENT = 0x1,
+	SCRIPTINSTANCE_MAX = 0x2,
+};
+
+typedef float vec4_t[4];
+
 struct LuaFile {
 	uintptr_t name;
 	uintptr_t unk;
@@ -511,8 +518,105 @@ struct __declspec(align(4)) GSC_EXPORT_ITEM
 	uint8_t flags;
 };
 
+union DvarLimits
+{
+	struct
+	{
+		int stringCount;
+		const char** strings;
+	} enumeration;
 
-void nlog(const char* str, ...);
+	struct
+	{
+		int min;
+		int max;
+	} integer;
+
+	struct
+	{
+		int64_t min;
+		int64_t max;
+	} integer64;
+
+	struct
+	{
+		uint64_t min;
+		uint64_t max;
+	} unsignedInt64;
+
+	struct
+	{
+		float min;
+		float max;
+	} value;
+
+	struct
+	{
+		float min;
+		float max;
+	} vector;
+};
+
+struct dvar_t;
+
+struct DvarValue
+{
+	union
+	{
+		bool enabled;
+		int integer;
+		uint32_t unsignedInt;
+		int64_t integer64;
+		uint64_t unsignedInt64;
+		float value;
+		vec4_t vector;
+		const char* string;
+		byte color[4];
+		const dvar_t* indirect[3];
+	} naked;
+
+	uint64_t encrypted;
+};
+
+struct DvarData
+{
+	DvarValue current;
+	DvarValue latched;
+	DvarValue reset;
+};
+
+struct DvarName
+{
+	__int64 hash;
+	__int64 null;
+};
+
+struct dvar_t
+{
+	DvarName name;
+	DvarData* value;
+	dvarType_t type;
+	unsigned int flags;
+	DvarLimits domain;
+	char padding_unk1[8];
+};
+
+struct gentity_t
+{
+
+};
+
+typedef void (*xcommand_t)(void);
+
+struct cmd_function_t
+{
+	cmd_function_t* next;
+	__int64 name;
+	const char* autoCompleteDir;
+	const char* autoCompleteExt;
+	xcommand_t function;
+};
+
 uintptr_t find_pattern(const char* module_name, const char* pattern);
 uintptr_t find_pattern(uintptr_t start, const char* module_name, const char* pattern);
 
@@ -533,8 +637,3 @@ size_t reverse_b(const void* val);
 size_t operator"" _g(size_t val);
 size_t reverse_g(size_t val);
 size_t reverse_g(const void* val);
-
-void log(std::string str);
-void log(const char* fmt, ...);
-
-extern void* exception_handler_handle;
