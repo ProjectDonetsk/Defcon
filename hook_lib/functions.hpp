@@ -59,7 +59,6 @@ struct Addresses {
 	uintptr_t watermark_font;
 	uintptr_t dvar_show_over_stack;
 
-
 	uintptr_t CL_DrawTextPhysical;
 
 	uintptr_t R_AddCmdDrawStretchPic;
@@ -81,8 +80,7 @@ struct Addresses {
 
 	uintptr_t shader_white;
 
-	// not named yet
-	uintptr_t DAT_180011dc0;
+	uintptr_t dvar_noDW;
 
 	uintptr_t Cbuf_AddText;
 	uintptr_t CbufAddtextFunc;
@@ -108,6 +106,12 @@ enum LobbyNetworkMode
 
 typedef uint32_t ScrVarIndex_t;
 struct ScrVmContext_t;
+struct dvar_t;
+typedef void (*xcommand_t)(void);
+struct cmd_function_t;
+struct gentity_t;
+enum scriptInstance_t;
+struct DvarValue;
 
 void Dvar_SetBoolFromSource(uintptr_t dvar, bool value, int source);
 void Dvar_SetStringFromSource(uintptr_t dvar, const char* value, int source);
@@ -160,5 +164,27 @@ float get_version();
 void LobbyHostBots_AddBotsToLobby(unsigned int lobbyType, int numBots, bool param_3, unsigned long lobbyID, unsigned long param_5);
 
 void Cbuf_AddText(const char* cmd);
+
+const uint64_t fnvHash(const char* data);
+
+// build 1.34.0.15931218
+
+dvar_t* Dvar_FindVar(__int64 dvar);
+
+const dvar_t* Dvar_RegisterInt(__int64 hash, const char* dvarName, int value, int min, int max, unsigned int flags);
+
+void Dvar_SetInt(dvar_t* dvar, int value, int a3);
+
+void Dvar_SetIntByHash(__int64 hash, int value);
+
+void Dvar_SetVariantByHash(__int64 hash, DvarValue value);
+
+gentity_t* SV_AddTestClient(const char* name, const char* unk);
+
+void Scr_AddEntity(scriptInstance_t inst, gentity_t* ent, unsigned int classNum);
+
+void AddTestClient();
+
+void Cmd_AddCommandInternal(const char* cmdName, xcommand_t function, cmd_function_t* allocedCmd);
 
 extern Addresses g_Addrs;

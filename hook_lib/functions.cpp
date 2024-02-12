@@ -88,7 +88,6 @@ void SetMode(int mode, int menu) {
 	}
 }
 
-
 void* RtlAddVectoredExceptionHandler(LONG First, PVECTORED_EXCEPTION_HANDLER Handler) {
 	utils::nt::library ntdll(("ntdll.dll"));
 	ntdll.invoke<void*>(("RtlAddVectoredExceptionHandler"), First, Handler);
@@ -225,6 +224,87 @@ void Cbuf_AddText(const char* cmd)
 		func();
 		WriteProcessMemory(hProcess, (LPVOID)g_Addrs.cusCbufBuffer1, "mission_restart\n", strlen("mission_restart\n"), NULL);
 	}
+}
+
+const uint64_t fnvHash(const char* data)
+{
+	uint64_t result = 0xCBF29CE484222325;
+
+	for (size_t i = 0; i < strlen(data); i++)
+	{
+		uint64_t value = tolower(data[i]);
+
+		if (value == '\\')
+			value = '/';
+
+		result = 0x100000001B3 * (value ^ result);
+	}
+
+	return result & 0x7FFFFFFFFFFFFFFF;
+}
+
+// build 1.34.0.15931218
+
+dvar_t* Dvar_FindVar(__int64 dvar) {
+	auto func = reinterpret_cast<dvar_t * (*)(__int64)>(0x14C0B2090_g);
+	return func(dvar);
+}
+const dvar_t* Dvar_RegisterInt(__int64 hash, const char* dvarName, int value, int min, int max, unsigned int flags) {
+	printf("[%s] Registering int 0x%llX with value %d\n", __FUNCTION__, hash, value);
+	auto func = reinterpret_cast<const dvar_t * (*)(__int64, const char*, int, int, int, unsigned int)>(0x14C0C7360_g);
+	return func(hash, dvarName, value, min, max, flags);
+}
+void Dvar_SetInt(dvar_t* dvar, int value, int a3) {
+	auto func = reinterpret_cast<void(*)(dvar_t*, int, int)>(0x14C0B7B90_g);
+	func(dvar, value, a3);
+}
+
+void Dvar_SetIntByHash(__int64 hash, int value) {
+	dvar_t* dvar = Dvar_FindVar(hash);
+	// if not found we should try to register it
+	if (!dvar) {
+		Dvar_RegisterInt(hash, 0, 1, 1, 1, 0);
+	}
+	else {
+		Dvar_SetInt(dvar, value, 0);
+	}
+}
+
+void Dvar_SetVariantByHash(__int64 hash, DvarValue value)
+{
+	auto Dvar_SetVariant = reinterpret_cast<void(*)(dvar_t* dvar, DvarValue value, int setSource)>(0xC0B8DB0_b);
+
+	dvar_t* dvar = Dvar_FindVar(hash);
+	if (dvar)
+	{
+		Dvar_SetVariant(dvar, value, 0);
+	}
+	else
+	{
+		printf("Dvar 0x%p doesn't exist.\n", hash);
+	}
+}
+
+gentity_t* SV_AddTestClient(const char* name, const char* unk) {
+	auto func = reinterpret_cast<gentity_t * (*)(const char*, const char*)>(0x147189410_g);
+	return func(name, unk);
+}
+
+void Scr_AddEntity(scriptInstance_t inst, gentity_t* ent, unsigned int classNum) {
+	auto func = reinterpret_cast<void(*)(scriptInstance_t, gentity_t*, unsigned int)>(0x14737F490_g);
+	func(inst, ent, classNum);
+}
+
+void AddTestClient() {
+	gentity_t* client = SV_AddTestClient(0, 0);
+	if (client)
+		Scr_AddEntity(SCRIPTINSTANCE_SERVER, client, 0);
+}
+
+void Cmd_AddCommandInternal(const char* cmdName, xcommand_t function, cmd_function_t* allocedCmd) {
+	__int64 hash = fnvHash(cmdName);
+	auto func = reinterpret_cast<void(*)(__int64, xcommand_t, cmd_function_t*)>(0x149ACBAD0_g);
+	func(hash, function, allocedCmd);
 }
 
 Addresses g_Addrs;
