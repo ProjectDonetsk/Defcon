@@ -1,7 +1,8 @@
 # Defcon
- Call of Duty: Black Ops Cold War - Reimagined <br>
+ Call of Duty: Black Ops Cold War - Reimagined
 
-Credits: <br>
-CODuploader for the original source <br>
-.r4v3n for improving upon the source <br>
-Sku-111 for reversing .r4v3n's source and releasing it
+
+## Credits
+- `CODuploader` - the original source.
+- `.r4v3n` - for improving upon the source.
+- `Sku-111` - for reversing `.r4v3n's` source and releasing it.
